@@ -1089,6 +1089,8 @@ function showWineDetail(id) {
     `<div class="detail-row"><span class="detail-key">${r[0]}</span><span class="detail-val">${r[1]}</span></div>`
   ).join('');
 
+  window._currentWineId = w.id;
+  window._currentWineName = f['Nome'] || 'Vino';
   document.getElementById('modal-body').innerHTML = `
     <div class="detail-hero">
       <div class="detail-thumb">${foto}</div>
@@ -1108,7 +1110,7 @@ function showWineDetail(id) {
     ${f['Note'] ? `<div class="detail-section"><div class="detail-section-title">Note</div><p style="font-size:13px;color:var(--text2);line-height:1.6">${f['Note']}</p></div>` : ''}
     <div class="detail-actions">
       <button class="btn-danger" onclick="deleteWine('${w.id}')">🗑 Elimina</button>
-      <button class="btn-degustate" onclick="openDegModal('${w.id}','${(f['Nome']||'').replace(/'/g,"\\'")}')">📖 Degusta</button>
+      <button class="btn-degustate" onclick="openDegModal(window._currentWineId, window._currentWineName)">📖 Degusta</button>
     </div>
   `;
   document.getElementById('modal-overlay').classList.add('open');
@@ -1118,6 +1120,9 @@ function closeModal(e) {
   if (!e || e.target === document.getElementById('modal-overlay')) {
     document.getElementById('modal-overlay').classList.remove('open');
   }
+}
+function forceCloseModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
 }
 
 async function deleteWine(id) {
@@ -1185,13 +1190,15 @@ function clearForm() {
 
 // ─── DEGUSTAZIONI ──────────────────────────────────────────
 function openDegModal(wineId, wineName) {
-  closeModal();
+  forceCloseModal();
   document.getElementById('deg-wine-id').value = wineId;
   document.getElementById('deg-vino-nome').value = wineName;
   document.getElementById('deg-data').value = new Date().toISOString().split('T')[0];
   currentRating = 0;
   updateStars();
-  document.getElementById('deg-modal-overlay').classList.add('open');
+  setTimeout(function() {
+    document.getElementById('deg-modal-overlay').classList.add('open');
+  }, 300);
 }
 
 function closeDegModal(e) {
