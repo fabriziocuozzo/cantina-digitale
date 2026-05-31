@@ -521,6 +521,20 @@
     font-family: 'DM Sans', sans-serif;
     cursor: pointer;
   }
+  .btn-edit {
+    flex: 1; padding: 12px;
+    background: transparent;
+    color: var(--burg);
+    border: 1px solid var(--burg);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-edit:active { background: var(--burg-pale); }
+
   .btn-degustate {
     flex: 2; padding: 12px;
     background: var(--gold);
@@ -863,6 +877,85 @@
   </div>
 </div>
 
+<!-- MODAL MODIFICA VINO -->
+<div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditModal(event)">
+  <div class="modal" id="edit-modal-content">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Modifica vino</div>
+    <input type="hidden" id="edit-wine-id"/>
+    <div class="form-group">
+      <label class="form-label">Nome vino *</label>
+      <input class="form-control" type="text" id="edit-nome"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cantina / Produttore</label>
+      <input class="form-control" type="text" id="edit-cantina"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Annata</label>
+        <input class="form-control" type="number" id="edit-annata" min="1900" max="2099"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipologia</label>
+        <select class="form-control" id="edit-tipologia">
+          <option value="">— seleziona —</option>
+          <option>Rosso</option><option>Bianco</option><option>Rosé</option>
+          <option>Bollicine</option><option>Passito</option><option>Altro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Regione</label>
+        <input class="form-control" type="text" id="edit-regione"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nazione</label>
+        <input class="form-control" type="text" id="edit-nazione"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Vitigno / Uvaggio</label>
+      <input class="form-control" type="text" id="edit-vitigno"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Formato</label>
+        <select class="form-control" id="edit-formato">
+          <option value="">— seleziona —</option>
+          <option>375ml</option><option>750ml</option>
+          <option>Magnum 1.5L</option><option>Jeroboam 3L</option><option>Altro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantità</label>
+        <input class="form-control" type="number" id="edit-quantita" min="0"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prezzo (€)</label>
+        <input class="form-control" type="number" id="edit-prezzo" step="0.01"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Posizione</label>
+        <input class="form-control" type="text" id="edit-posizione"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Da aprire dal</label>
+      <input class="form-control" type="date" id="edit-data-apertura"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note</label>
+      <textarea class="form-control" id="edit-note"></textarea>
+    </div>
+    <button class="btn-primary" onclick="saveEditWine()">💾 Salva modifiche</button>
+    <button class="btn-secondary" onclick="closeEditModal()">Annulla</button>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1110,6 +1203,7 @@ function showWineDetail(id) {
     ${f['Note'] ? `<div class="detail-section"><div class="detail-section-title">Note</div><p style="font-size:13px;color:var(--text2);line-height:1.6">${f['Note']}</p></div>` : ''}
     <div class="detail-actions">
       <button class="btn-danger" onclick="deleteWine('${w.id}')">🗑 Elimina</button>
+      <button class="btn-edit" onclick="openEditModal(window._currentWineId)">✏️ Modifica</button>
       <button class="btn-degustate" onclick="openDegModal(window._currentWineId, window._currentWineName)">📖 Degusta</button>
     </div>
   `;
@@ -1312,6 +1406,88 @@ function renderStats() {
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxVal*100)}%;background:${colori[t]||'var(--gold)'}"></div></div>
     </div>`).join('');
   document.getElementById('bars-tipologie').innerHTML = barsHTML;
+}
+
+// ─── EDIT WINE ────────────────────────────────────────────
+function openEditModal(wineId) {
+  const w = allWines.find(x => x.id === wineId);
+  if (!w) return;
+  const f = w.fields;
+  forceCloseModal();
+  document.getElementById('edit-wine-id').value = wineId;
+  document.getElementById('edit-nome').value = f['Nome'] || '';
+  document.getElementById('edit-cantina').value = f['Cantina'] || '';
+  document.getElementById('edit-annata').value = f['Annata'] || '';
+  document.getElementById('edit-tipologia').value = f['Tipologia'] || '';
+  document.getElementById('edit-regione').value = f['Regione'] || '';
+  document.getElementById('edit-nazione').value = f['Nazione'] || '';
+  document.getElementById('edit-vitigno').value = f['Vitigno'] || '';
+  document.getElementById('edit-formato').value = f['Formato'] || '';
+  document.getElementById('edit-quantita').value = f['Quantita'] || 1;
+  document.getElementById('edit-prezzo').value = f['Prezzo'] || '';
+  document.getElementById('edit-posizione').value = f['Posizione'] || '';
+  document.getElementById('edit-data-apertura').value = f['Da aprire dal'] || '';
+  document.getElementById('edit-note').value = f['Note'] || '';
+  setTimeout(function() {
+    document.getElementById('edit-modal-overlay').classList.add('open');
+  }, 300);
+}
+
+function closeEditModal(e) {
+  if (!e || e.target === document.getElementById('edit-modal-overlay')) {
+    document.getElementById('edit-modal-overlay').classList.remove('open');
+  }
+}
+
+async function saveEditWine() {
+  const wineId = document.getElementById('edit-wine-id').value;
+  const nome = document.getElementById('edit-nome').value.trim();
+  if (!nome) { showToast('⚠️ Il nome è obbligatorio'); return; }
+  const fields = { Nome: nome };
+  const cantina = document.getElementById('edit-cantina').value.trim();
+  const annata = document.getElementById('edit-annata').value;
+  const tipologia = document.getElementById('edit-tipologia').value;
+  const regione = document.getElementById('edit-regione').value.trim();
+  const nazione = document.getElementById('edit-nazione').value.trim();
+  const vitigno = document.getElementById('edit-vitigno').value.trim();
+  const formato = document.getElementById('edit-formato').value;
+  const prezzo = document.getElementById('edit-prezzo').value;
+  const quantita = document.getElementById('edit-quantita').value;
+  const posizione = document.getElementById('edit-posizione').value.trim();
+  const dataAp = document.getElementById('edit-data-apertura').value;
+  const note = document.getElementById('edit-note').value.trim();
+  if (cantina) fields['Cantina'] = cantina; else fields['Cantina'] = null;
+  if (annata) fields['Annata'] = parseInt(annata); else fields['Annata'] = null;
+  if (tipologia) fields['Tipologia'] = tipologia; else fields['Tipologia'] = null;
+  if (regione) fields['Regione'] = regione; else fields['Regione'] = null;
+  if (nazione) fields['Nazione'] = nazione; else fields['Nazione'] = null;
+  if (vitigno) fields['Vitigno'] = vitigno; else fields['Vitigno'] = null;
+  if (formato) fields['Formato'] = formato; else fields['Formato'] = null;
+  if (prezzo) fields['Prezzo'] = parseFloat(prezzo); else fields['Prezzo'] = null;
+  fields['Quantita'] = quantita ? parseInt(quantita) : 1;
+  if (posizione) fields['Posizione'] = posizione; else fields['Posizione'] = null;
+  if (dataAp) fields['Da aprire dal'] = dataAp; else fields['Da aprire dal'] = null;
+  if (note) fields['Note'] = note; else fields['Note'] = null;
+  try {
+    const res = await fetch(`${AT_BASE}/${CFG.baseId}/${CFG.tableVini}/${wineId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': 'Bearer ' + CFG.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fields })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const updated = await res.json();
+    // Aggiorna array locale
+    const idx = allWines.findIndex(x => x.id === wineId);
+    if (idx !== -1) allWines[idx] = updated;
+    closeEditModal();
+    renderWines();
+    showToast('✅ Vino aggiornato!');
+  } catch(e) {
+    showToast('❌ Errore: ' + e.message);
+  }
 }
 
 // ─── UTILS ─────────────────────────────────────────────────
