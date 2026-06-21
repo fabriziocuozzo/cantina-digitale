@@ -1112,7 +1112,8 @@ async function loadWines() {
 
 function renderWines() {
   const q = document.getElementById('search-input').value.toLowerCase();
-  let wines = allWines.filter(w => {
+  let wines = allWines.slice().sort((a,b) => (a.fields['Nome']||'').localeCompare(b.fields['Nome']||'', 'it', {sensitivity:'base'}));
+  wines = wines.filter(w => {
     const f = w.fields;
     const matchFilter = currentFilter === 'tutti' || f['Tipologia'] === currentFilter;
     const matchSearch = !q ||
