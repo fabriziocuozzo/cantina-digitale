@@ -775,6 +775,14 @@
       <div class="chart-title">Per tipologia</div>
       <div id="bars-tipologie"></div>
     </div>
+    <div class="chart-bar-wrap" id="chart-nazioni" style="margin-top:20px;">
+      <div class="chart-title">Per nazione</div>
+      <div id="bars-nazioni"></div>
+    </div>
+    <div class="chart-bar-wrap" id="chart-regioni" style="margin-top:20px;">
+      <div class="chart-title">Per regione</div>
+      <div id="bars-regioni"></div>
+    </div>
   </div>
 
   <!-- TAB CONFIG -->
@@ -1406,6 +1414,37 @@ function renderStats() {
       <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxVal*100)}%;background:${colori[t]||'var(--gold)'}"></div></div>
     </div>`).join('');
   document.getElementById('bars-tipologie').innerHTML = barsHTML;
+
+  // Nazione
+  const nazCount = {};
+  allWines.forEach(w => {
+    const n = w.fields['Nazione'] || 'Non specificata';
+    nazCount[n] = (nazCount[n] || 0) + (w.fields['Quantita'] || 1);
+  });
+  renderBarChart('bars-nazioni', nazCount);
+
+  // Regione
+  const regCount = {};
+  allWines.forEach(w => {
+    const r = w.fields['Regione'] || 'Non specificata';
+    regCount[r] = (regCount[r] || 0) + (w.fields['Quantita'] || 1);
+  });
+  renderBarChart('bars-regioni', regCount);
+}
+
+function renderBarChart(elementId, dataObj) {
+  const entries = Object.entries(dataObj).sort((a,b) => b[1]-a[1]);
+  if (!entries.length) {
+    document.getElementById(elementId).innerHTML = '<p style="font-size:12px;color:var(--text3)">Nessun dato disponibile</p>';
+    return;
+  }
+  const max = Math.max(...entries.map(e => e[1]));
+  const html = entries.map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label"><span>${label}</span><span>${val} bott.</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/max*100)}%"></div></div>
+    </div>`).join('');
+  document.getElementById(elementId).innerHTML = html;
 }
 
 // ─── EDIT WINE ────────────────────────────────────────────
